@@ -18,11 +18,10 @@ var collisionCtx = collisionCanvas.getContext("2d");
 var playerX = 0;
 var playerY = 0;
 var playerSize = 10;
-var speed = 3;
+var speed = 7;
 
-var goalX = 0;
-var goalY = 0;
-var goalSize = 10;
+var cheeses = [];
+var cheeseSize = 10;
 
 var w = false;
 var a = false;
@@ -32,12 +31,25 @@ var d = false;
 var win = false;
 
 
+var goalX = canvas.width / 2;
+var goalY = canvas.height - 20;
+var goalSize = 20;
 
 maze.onload = function () {
     collisionCtx.fillStyle = "white";
     collisionCtx.fillRect(0, 0, canvas.width, canvas.height);
     collisionCtx.drawImage(maze, 0, 0, canvas.width, canvas.height);
 
+    for (var i = 0; i < 7; i++) {
+        var x, y;
+
+        do {
+            x = Math.random() * canvas.width;
+            y = Math.random() * canvas.height;
+        } while (isWall(x, y));
+
+        cheeses.push({ x: x, y: y, collected: false });
+    }
 
     playerX = canvas.width / 2;
     playerY = playerSize;
@@ -46,92 +58,114 @@ maze.onload = function () {
         playerY++;
     }
 
-    goalX = canvas.width / 2;
-    goalY = canvas.height - goalSize;
-
-    while (isWall(goalX, goalY)) {
-        goalY--;
-    }
-
     requestAnimationFrame(loop);
 };
 
-
-
 document.addEventListener("keydown", function (e) {
-    if (e.key == "ArrowUp") w = true;
-    if (e.key == "ArrowLeft") a = true;
-    if (e.key == "ArrowDown") s = true;
-    if (e.key == "ArrowRight") d = true;
+    if (e.key === "ArrowUp") w = true;
+    if (e.key === "ArrowLeft") a = true;
+    if (e.key === "ArrowDown") s = true;
+    if (e.key === "ArrowRight") d = true;
 });
 
 document.addEventListener("keyup", function (e) {
-    if (e.key == "ArrowUp") w = false;
-    if (e.key == "ArrowLeft") a = false;
-    if (e.key == "ArrowDown") s = false;
-    if (e.key == "ArrowRight") d = false;
+    if (e.key === "ArrowUp") w = false;
+    if (e.key === "ArrowLeft") a = false;
+    if (e.key === "ArrowDown") s = false;
+    if (e.key === "ArrowRight") d = false;
 });
-
 
 function loop() {
 
     if (!win) {
-
-        if (w) {
-            if (!isWall(playerX, playerY - speed)) {
-                playerY -= speed;
-            }
-        }
-
-        if (s) {
-            if (!isWall(playerX, playerY + speed)) {
-                playerY += speed;
-            }
-        }
-
-        if (a) {
-            if (!isWall(playerX - speed, playerY)) {
-                playerX -= speed;
-            }
-        }
-
-        if (d) {
-            if (!isWall(playerX + speed, playerY)) {
-                playerX += speed;
-            }
-        }
-
-
-        if (
-            playerX - playerSize < goalX + goalSize &&
-            playerX + playerSize > goalX - goalSize &&
-            playerY - playerSize < goalY + goalSize &&
-            playerY + playerSize > goalY - goalSize
-        ) {
-            win = true;
-        }
+        movePlayer();
+        checkCheeseCollision();
     }
 
     draw();
     requestAnimationFrame(loop);
 }
 
+function movePlayer() {
+    var newX = playerX;
+    var newY = playerY;
+
+    if (w) newY -= speed;
+    if (s) newY += speed;
+    if (a) newX -= speed;
+    if (d) newX += speed;
+
+    if (!isWall(newX, playerY)) {
+        playerX = newX;
+    }
+
+    if (!isWall(playerX, newY)) {
+        playerY = newY;
+    }
+}
+
+function checkCheeseCollision() {
+    for (var i = 0; i < cheeses.length; i++) {
+        if (!cheeses[i].collected) {
+            if (
+                playerX - playerSize < cheeses[i].x + cheeseSize &&
+                playerX + playerSize > cheeses[i].x - cheeseSize &&
+                playerY - playerSize < cheeses[i].y + cheeseSize &&
+                playerY + playerSize > cheeses[i].y - cheeseSize
+            ) {
+                cheeses[i].collected = true;
+            }
+        }
+    }
+
+    if (cheeses.every(c => c.collected) && isAtGoal(playerX, playerY)) {
+        win = true;
+    }
+}
+
+function isAtGoal(x, y) {
+    return (
+        x + playerSize > goalX - goalSize / 2 &&
+        x - playerSize < goalX + goalSize / 2 &&
+        y + playerSize > goalY - goalSize / 2 &&
+        y - playerSize < goalY + goalSize / 2
+    );
+}
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(maze, 0, 0, canvas.width, canvas.height);
 
-    ctx.drawImage(cheeseImage, goalX - goalSize, goalY - goalSize, goalSize * 2, goalSize * 2);
+    // Draw cheeses
+    for (var i = 0; i < cheeses.length; i++) {
+        if (!cheeses[i].collected) {
+            ctx.drawImage(
+                cheeseImage,
+                cheeses[i].x - cheeseSize,
+                cheeses[i].y - cheeseSize,
+                cheeseSize * 2,
+                cheeseSize * 2
+            );
+        }
+    }
 
-    ctx.drawImage(ratImage, playerX - playerSize, playerY - playerSize, playerSize * 2, playerSize * 2);
+    ctx.drawImage(
+        ratImage,
+        playerX - playerSize,
+        playerY - playerSize,
+        playerSize * 2,
+        playerSize * 2
+    );
+
+    ctx.fillStyle = "yellow";
+    ctx.fillRect(goalX - goalSize / 2, goalY - goalSize / 2, goalSize, goalSize);
 
     if (win) {
         ctx.fillStyle = "yellow";
         ctx.font = "36px Arial";
-        ctx.fillText("Win!", canvas.width / 2 - 80, canvas.height / 2);
+        ctx.fillText("You Win!", canvas.width / 2 - 90, canvas.height / 2);
     }
 }
-
 
 function isWall(x, y) {
 

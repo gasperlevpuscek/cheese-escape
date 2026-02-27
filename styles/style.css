@@ -10,6 +10,7 @@ body {
     height: 100vh;
     width: 100vw;
     margin: 0;
+
 }
 
 h1 {
@@ -20,21 +21,18 @@ h1 {
     text-shadow: 1px 1px 2px black;
 }
 
-.root {
+.bottom {
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
-    background-color: rgb(125, 122, 122);
+    background-image: url("../images/floor.jpg");
     align-items: center;
     justify-content: center;
     gap: 16px;
     margin: 0;
 }
 
-canvas {
-    background-color: rgb(135, 110, 55);
-}
 
 .mazeDiv {
     width: 100%;
