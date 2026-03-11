@@ -1,289 +1,213 @@
-var canvas = document.getElementById("mazeCanvas");
-var ctx = canvas.getContext("2d");
+var canvas, canvasContext,
+    playerX = 352,
+    playerY = 20,
+    playerW = 15,
+    playerH = 15,
+    playerSpeedX = 0,
+    playerSpeedY = 0,
+    mazeBackground = new Image(),
+    mazeCollisionCanvas,
+    mazeCollisionContext;
 
-var maze = new Image();
-maze.src = "images/maze25.svg";
+var KEY_W = 87,
+    KEY_A = 65,
+    KEY_S = 83,
+    KEY_D = 68,
 
-var ratImage = new Image();
-ratImage.src = "images/rat.png";
+    keyHeld_Down = false,
+    keyHeld_Up = false,
+    keyHeld_Left = false,
+    keyHeld_Right = false,
 
-var cheeseImage = new Image();
-cheeseImage.src = "images/cheese.png";
+    mouseX = 0,
+    mouseY = 0;
 
-var collisionCanvas = document.createElement("canvas");
-collisionCanvas.width = canvas.width;
-collisionCanvas.height = canvas.height;
-var collisionCtx = collisionCanvas.getContext("2d");
+window.onload = function () {
+    canvas = document.getElementById('mazeCanvas');
+    canvasContext = canvas.getContext('2d');
 
-var playerX = 0;
-var playerY = 0;
-var playerSize = 10;
-var playerCollisionRadius = 7;
-var speed = 5;
+    mazeCollisionCanvas = document.createElement('canvas');
+    mazeCollisionCanvas.width = canvas.width;
+    mazeCollisionCanvas.height = canvas.height;
+    mazeCollisionContext = mazeCollisionCanvas.getContext('2d');
 
-var cheeses = [];
-var cheeseSize = 10;
-var solvePathSourceWidth = 404;
-var solvePathSourceHeight = 404;
+    mazeBackground.onload = function () {
+        mazeCollisionContext.clearRect(0, 0, canvas.width, canvas.height);
+        mazeCollisionContext.drawImage(mazeBackground, 0, 0, canvas.width, canvas.height);
 
-var solvePathRaw =
-    "202,2 202,10 234,10 234,26 250,26 250,10 266,10 266,26 282,26 282,90 298,90 298,74 314,74 314,58 298,58 298,42 314,42 314,26 330,26 330,74 362,74 362,90 330,90 330,106 346,106 346,122 298,122 298,106 282,106 282,122 266,122 266,42 250,42 250,74 234,74 234,58 186,58 186,90 170,90 170,106 154,106 154,138 138,138 138,74 106,74 106,106 90,106 90,90 74,90 74,58 58,58 58,90 42,90 42,122 58,122 58,138 74,138 74,170 90,170 90,186 74,186 74,202 58,202 58,186 42,186 42,218 90,218 90,234 106,234 106,250 90,250 90,266 106,266 106,298 90,298 90,314 122,314 122,330 106,330 106,346 122,346 122,362 106,362 106,378 74,378 74,394 122,394 122,378 154,378 154,362 138,362 138,346 170,346 170,330 154,330 154,314 138,314 138,298 122,298 122,282 138,282 138,266 122,266 122,250 154,250 154,234 186,234 186,250 170,250 170,266 154,266 154,298 218,298 218,282 234,282 234,314 250,314 250,282 266,282 266,298 282,298 282,266 298,266 298,298 314,298 314,330 330,330 330,346 314,346 314,394 298,394 298,378 266,378 266,362 234,362 234,378 218,378 218,362 202,362 202,402";
-var solvePathPoints = parseSolvePathPoints(solvePathRaw);
+        var framesPerSecond = 60;
+        setInterval(function () {
+            playerMove();
+            drawAll();
+        }, 1000 / framesPerSecond);
+    };
 
-var w = false;
-var a = false;
-var s = false;
-var d = false;
+    mazeBackground.src = 'images/maze25.svg';
 
-var win = false;
-
-
-var goalX = canvas.width / 2;
-var goalY = canvas.height - 20;
-var goalSize = 20;
-
-maze.onload = function () {
-    collisionCtx.fillStyle = "white";
-    collisionCtx.fillRect(0, 0, canvas.width, canvas.height);
-    collisionCtx.drawImage(maze, 0, 0, canvas.width, canvas.height);
-
-    for (var i = 0; i < 30; i++) {
-        var x, y;
-        var attempts = 0;
-
-        do {
-            var point = getRandomPointOnSolvePath();
-            x = point.x;
-            y = point.y;
-            attempts++;
-
-            if (attempts > 200) {
-                x = Math.random() * canvas.width;
-                y = Math.random() * canvas.height;
-            }
-        } while (isWall(x, y) || isTooCloseToExistingCheese(x, y));
-
-        cheeses.push({ x: x, y: y, collected: false });
-    }
-
-    playerX = canvas.width / 2;
-    playerY = playerSize;
-
-    while (isWall(playerX, playerY)) {
-        playerY++;
-    }
-
-    requestAnimationFrame(loop);
+    canvas.addEventListener('mousemove', updateMousePos);
+    document.addEventListener('keydown', keyPressed);
+    document.addEventListener('keyup', keyReleased);
 };
 
-document.addEventListener("keydown", function (e) {
-    if (e.key === "ArrowUp") w = true;
-    if (e.key === "ArrowLeft") a = true;
-    if (e.key === "ArrowDown") s = true;
-    if (e.key === "ArrowRight") d = true;
-});
+function updateMousePos(evt) {
+    var rect = canvas.getBoundingClientRect();
+    var root = document.documentElement;
 
-document.addEventListener("keyup", function (e) {
-    if (e.key === "ArrowUp") w = false;
-    if (e.key === "ArrowLeft") a = false;
-    if (e.key === "ArrowDown") s = false;
-    if (e.key === "ArrowRight") d = false;
-});
-
-function loop() {
-
-    if (!win) {
-        movePlayer();
-        checkCheeseCollision();
-    }
-
-    draw();
-    requestAnimationFrame(loop);
+    mouseX = evt.clientX - rect.left - root.scrollLeft;
+    mouseY = evt.clientY - rect.top - root.scrollTop;
 }
 
-function movePlayer() {
-    var moveX = 0;
-    var moveY = 0;
-
-    if (w) moveY -= speed;
-    if (s) moveY += speed;
-    if (a) moveX -= speed;
-    if (d) moveX += speed;
-
-    moveAxis("x", moveX);
-    moveAxis("y", moveY);
-}
-
-function moveAxis(axis, distance) {
-    if (distance === 0) {
-        return;
+function keyPressed(evt) {
+    if (evt.keyCode == KEY_A) {
+        keyHeld_Left = true;
+    }
+    if (evt.keyCode == KEY_D) {
+        keyHeld_Right = true;
+    }
+    if (evt.keyCode == KEY_W) {
+        keyHeld_Up = true;
+    }
+    if (evt.keyCode == KEY_S) {
+        keyHeld_Down = true;
     }
 
-    var direction = distance > 0 ? 1 : -1;
-    var remaining = Math.abs(distance);
+    evt.preventDefault();
+}
 
-    while (remaining > 0) {
-        var step = Math.min(1, remaining) * direction;
-        var nextX = axis === "x" ? playerX + step : playerX;
-        var nextY = axis === "y" ? playerY + step : playerY;
+function keyReleased(evt) {
+    if (evt.keyCode == KEY_A) {
+        keyHeld_Left = false;
+    }
+    if (evt.keyCode == KEY_D) {
+        keyHeld_Right = false;
+    }
+    if (evt.keyCode == KEY_W) {
+        keyHeld_Up = false;
+    }
+    if (evt.keyCode == KEY_S) {
+        keyHeld_Down = false;
+    }
 
-        if (isWall(nextX, nextY)) {
+    evt.preventDefault();
+}
+
+function blockedInDirection(nextX, nextY, dirX, dirY) {
+    var i;
+
+    if (dirX > 0) {
+        for (i = 0; i < playerH; i++) {
+            if (isBlackPixel(nextX + playerW - 1, nextY + i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    if (dirX < 0) {
+        for (i = 0; i < playerH; i++) {
+            if (isBlackPixel(nextX, nextY + i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    if (dirY > 0) {
+        for (i = 0; i < playerW; i++) {
+            if (isBlackPixel(nextX + i, nextY + playerH - 1)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    if (dirY < 0) {
+        for (i = 0; i < playerW; i++) {
+            if (isBlackPixel(nextX + i, nextY)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    return false;
+}
+
+function playerMove() {
+    playerSpeedX = 0;
+    playerSpeedY = 0;
+
+    if (keyHeld_Up) {
+        playerSpeedY = -5;
+    } else if (keyHeld_Down) {
+        playerSpeedY = 5;
+    } else if (keyHeld_Left) {
+        playerSpeedX = -5;
+    } else if (keyHeld_Right) {
+        playerSpeedX = 5;
+    }
+
+    // Maze collision
+    var stepCount = Math.max(Math.abs(playerSpeedX), Math.abs(playerSpeedY));
+    var stepX = stepCount > 0 ? playerSpeedX / stepCount : 0;
+    var stepY = stepCount > 0 ? playerSpeedY / stepCount : 0;
+    var stepIndex;
+
+
+    for (stepIndex = 0; stepIndex < stepCount; stepIndex++) {
+        var nextX = playerX + stepX;
+        var nextY = playerY + stepY;
+
+        if (stepX !== 0 && blockedInDirection(nextX, playerY, stepX, 0)) {
+            break;
+        }
+        if (stepY !== 0 && blockedInDirection(playerX, nextY, 0, stepY)) {
             break;
         }
 
-        if (axis === "x") {
-            playerX = nextX;
-        } else {
-            playerY = nextY;
-        }
+        playerX = nextX;
+        playerY = nextY;
+    }
 
-        remaining -= 1;
+    // canvas sides collision
+    if (playerY < 0) {
+        playerY = 0;
+    } else if (playerY > canvas.height - playerH) {
+        playerY = canvas.height - playerH;
+    }
+
+    if (playerX < 0) {
+        playerX = 0;
+    } else if (playerX > canvas.width - playerW) {
+        playerX = canvas.width - playerW;
     }
 }
 
-function checkCheeseCollision() {
-    for (var i = 0; i < cheeses.length; i++) {
-        if (!cheeses[i].collected) {
-            if (
-                playerX - playerSize < cheeses[i].x + cheeseSize &&
-                playerX + playerSize > cheeses[i].x - cheeseSize &&
-                playerY - playerSize < cheeses[i].y + cheeseSize &&
-                playerY + playerSize > cheeses[i].y - cheeseSize
-            ) {
-                cheeses[i].collected = true;
-            }
-        }
-    }
+function drawAll() {
+    canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+    canvasContext.drawImage(mazeBackground, 0, 0, canvas.width, canvas.height);
+    colorRect(playerX, playerY, playerW, playerH, 'white');
 
-    if (cheeses.every(c => c.collected) && isAtGoal(playerX, playerY)) {
-        win = true;
-    }
 }
 
-function isAtGoal(x, y) {
-    return (
-        x + playerSize > goalX - goalSize / 2 &&
-        x - playerSize < goalX + goalSize / 2 &&
-        y + playerSize > goalY - goalSize / 2 &&
-        y - playerSize < goalY + goalSize / 2
-    );
+function colorRect(leftX, topY, width, height, drawColor) {
+    canvasContext.fillStyle = drawColor;
+    canvasContext.fillRect(leftX, topY, width, height);
 }
 
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(maze, 0, 0, canvas.width, canvas.height);
+function isBlackPixel(x, y) {
+    x = Math.floor(x);
+    y = Math.floor(y);
 
-    // Draw cheeses
-    for (var i = 0; i < cheeses.length; i++) {
-        if (!cheeses[i].collected) {
-            ctx.drawImage(
-                cheeseImage,
-                cheeses[i].x - cheeseSize,
-                cheeses[i].y - cheeseSize,
-                cheeseSize * 2,
-                cheeseSize * 2
-            );
-        }
-    }
-
-    ctx.drawImage(
-        ratImage,
-        playerX - playerSize,
-        playerY - playerSize,
-        playerSize * 2,
-        playerSize * 2
-    );
-
-    ctx.fillStyle = "yellow";
-    ctx.fillRect(goalX - goalSize / 2, goalY - goalSize / 2, goalSize, goalSize);
-
-    if (win) {
-        ctx.fillStyle = "yellow";
-        ctx.font = "36px Arial";
-        ctx.fillText("You Win!", canvas.width / 2 - 90, canvas.height / 2);
-    }
-}
-
-function parseSolvePathPoints(raw) {
-    var pairs = raw.trim().split(/\s+/);
-    var points = [];
-    var scaleX = canvas.width / solvePathSourceWidth;
-    var scaleY = canvas.height / solvePathSourceHeight;
-
-    for (var i = 0; i < pairs.length; i++) {
-        var coords = pairs[i].split(",");
-        points.push({
-            x: Number(coords[0]) * scaleX,
-            y: Number(coords[1]) * scaleY
-        });
-    }
-
-    return points;
-}
-
-function getRandomPointOnSolvePath() {
-    if (solvePathPoints.length < 2) {
-        return { x: canvas.width / 2, y: canvas.height / 2 };
-    }
-
-    var segmentIndex = Math.floor(Math.random() * (solvePathPoints.length - 1));
-    var start = solvePathPoints[segmentIndex];
-    var end = solvePathPoints[segmentIndex + 1];
-    var t = Math.random();
-
-    return {
-        x: start.x + (end.x - start.x) * t,
-        y: start.y + (end.y - start.y) * t
-    };
-}
-
-function isTooCloseToExistingCheese(x, y) {
-    for (var i = 0; i < cheeses.length; i++) {
-        var dx = cheeses[i].x - x;
-        var dy = cheeses[i].y - y;
-        var minDistance = cheeseSize * 2.5;
-
-        if (Math.sqrt(dx * dx + dy * dy) < minDistance) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-function isWall(x, y) {
-
-    if (
-        x - playerCollisionRadius < 0 ||
-        y - playerCollisionRadius < 0 ||
-        x + playerCollisionRadius >= canvas.width ||
-        y + playerCollisionRadius >= canvas.height
-    ) {
+    if (x < 0 || y < 0 || x >= canvas.width || y >= canvas.height) {
         return true;
     }
 
-    var points = [
-        [x, y],
-        [x + playerCollisionRadius, y],
-        [x - playerCollisionRadius, y],
-        [x, y + playerCollisionRadius],
-        [x, y - playerCollisionRadius],
-        [x + playerCollisionRadius, y + playerCollisionRadius],
-        [x + playerCollisionRadius, y - playerCollisionRadius],
-        [x - playerCollisionRadius, y + playerCollisionRadius],
-        [x - playerCollisionRadius, y - playerCollisionRadius]
-    ];
+    var pixel = mazeCollisionContext.getImageData(x, y, 1, 1).data;
+    var r = pixel[0];
+    var g = pixel[1];
+    var b = pixel[2];
+    var a = pixel[3];
 
-    for (var i = 0; i < points.length; i++) {
-        var px = Math.round(points[i][0]);
-        var py = Math.round(points[i][1]);
-
-        var pixel = collisionCtx.getImageData(px, py, 1, 1).data;
-
-        if (pixel[0] < 80 && pixel[1] < 80 && pixel[2] < 80) {
-            return true;
-        }
-    }
-
-    return false;
+    return a > 0 && r < 10 && g < 10 && b < 10;
 }
