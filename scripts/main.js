@@ -1,8 +1,8 @@
 var canvas, canvasContext,
     playerX = 352,
     playerY = 20,
-    playerW = 20,
-    playerH = 20,
+    playerW = 18,
+    playerH = 18,
     playerSpeedX = 0,
     playerSpeedY = 0,
     mazeBackground = new Image(),
@@ -174,7 +174,6 @@ function playerMove() {
             ratAnimationFrame = (ratAnimationFrame + 1) % 2;
         }
     } else {
-        ratDirection = 'right';
         ratAnimationTick = 0;
         ratAnimationFrame = 0;
     }
