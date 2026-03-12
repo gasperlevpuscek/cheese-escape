@@ -1,11 +1,17 @@
 var canvas, canvasContext,
     playerX = 352,
     playerY = 20,
-    playerW = 15,
-    playerH = 15,
+    playerW = 17,
+    playerH = 17,
     playerSpeedX = 0,
     playerSpeedY = 0,
     mazeBackground = new Image(),
+    ratRightFrames = [new Image(), new Image()],
+    ratLeftFrames = [new Image(), new Image()],
+    ratAnimationFrame = 0,
+    ratAnimationTick = 0,
+    ratAnimationSpeed = 8,
+    ratDirection = 'right',
     mazeCollisionCanvas,
     mazeCollisionContext;
 
@@ -26,6 +32,11 @@ window.onload = function () {
     canvas = document.getElementById('mazeCanvas');
     canvasContext = canvas.getContext('2d');
 
+    ratRightFrames[0].src = 'images/ratSprites/RatRight1.png';
+    ratRightFrames[1].src = 'images/ratSprites/RatRight2.png';
+    ratLeftFrames[0].src = 'images/ratSprites/RatLeft1.png';
+    ratLeftFrames[1].src = 'images/ratSprites/RatLeft2.png';
+
     mazeCollisionCanvas = document.createElement('canvas');
     mazeCollisionCanvas.width = canvas.width;
     mazeCollisionCanvas.height = canvas.height;
@@ -34,6 +45,7 @@ window.onload = function () {
     mazeBackground.onload = function () {
         mazeCollisionContext.clearRect(0, 0, canvas.width, canvas.height);
         mazeCollisionContext.drawImage(mazeBackground, 0, 0, canvas.width, canvas.height);
+        spawnCheesesFromPolyline();
 
         var framesPerSecond = 60;
         setInterval(function () {
@@ -147,6 +159,26 @@ function playerMove() {
         playerSpeedX = 5;
     }
 
+    if (keyHeld_Right || keyHeld_Down) {
+        ratDirection = 'right';
+        ratAnimationTick++;
+        if (ratAnimationTick >= ratAnimationSpeed) {
+            ratAnimationTick = 0;
+            ratAnimationFrame = (ratAnimationFrame + 1) % 2;
+        }
+    } else if (keyHeld_Left || keyHeld_Up) {
+        ratDirection = 'left';
+        ratAnimationTick++;
+        if (ratAnimationTick >= ratAnimationSpeed) {
+            ratAnimationTick = 0;
+            ratAnimationFrame = (ratAnimationFrame + 1) % 2;
+        }
+    } else {
+        ratDirection = 'right';
+        ratAnimationTick = 0;
+        ratAnimationFrame = 0;
+    }
+
     // Maze collision
     var stepCount = Math.max(Math.abs(playerSpeedX), Math.abs(playerSpeedY));
     var stepX = stepCount > 0 ? playerSpeedX / stepCount : 0;
@@ -181,12 +213,22 @@ function playerMove() {
     } else if (playerX > canvas.width - playerW) {
         playerX = canvas.width - playerW;
     }
+
+    collectCheesesNearPlayer(playerX, playerY, playerW, playerH);
 }
 
 function drawAll() {
     canvasContext.clearRect(0, 0, canvas.width, canvas.height);
     canvasContext.drawImage(mazeBackground, 0, 0, canvas.width, canvas.height);
-    colorRect(playerX, playerY, playerW, playerH, 'white');
+    drawCheeses();
+
+    var activeFrames = ratDirection === 'left' ? ratLeftFrames : ratRightFrames;
+    var spriteImg = activeFrames[ratAnimationFrame];
+    if (spriteImg && spriteImg.complete) {
+        canvasContext.drawImage(spriteImg, playerX, playerY, playerW, playerH);
+    } else {
+        colorRect(playerX, playerY, playerW, playerH, 'white');
+    }
 
 }
 
