@@ -13,12 +13,18 @@
     <div class="bottom">
         <h1>Cheese Chaser</h1>
         <div class="mazeDiv">
-            <canvas class="change-my-color" id="mazeCanvas" width="720" height="720">
+            <canvas id="mazeCanvas" width="720" height="720">
             </canvas>
         </div>
+
+        <div class="cheeseDiv" id="cheeseDiv"></div>
     </div>
+    <audio id="bgMusic" src="sounds/ratEncounter.mp3" loop preload="auto"></audio>
 </body>
+<script src="scripts/backgroundMusic.js"></script>
 <script src="scripts/cheeseSpawn.js"></script>
 <script src="scripts/main.js"></script>
+
+
 
 </html>
