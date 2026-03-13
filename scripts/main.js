@@ -1,8 +1,13 @@
 var canvas, canvasContext,
-    playerX = 352,
+    playerX = 430,
     playerY = 20,
-    playerW = 18,
-    playerH = 18,
+    playerW = 15,
+    playerH = 15,
+
+    spriteSize = 60,
+    offsetX = (spriteSize - playerW) / 2,
+    offsetY = (spriteSize - playerH) / 2,
+
     playerSpeedX = 0,
     playerSpeedY = 0,
     mazeBackground = new Image(),
@@ -15,27 +20,25 @@ var canvas, canvasContext,
     mazeCollisionCanvas,
     mazeCollisionContext;
 
-var KEY_W = 87,
-    KEY_A = 65,
-    KEY_S = 83,
-    KEY_D = 68,
+var KEY_UP = 38,
+    KEY_LEFT = 37,
+    KEY_DOWN = 40,
+    KEY_RIGHT = 39,
 
     keyHeld_Down = false,
     keyHeld_Up = false,
     keyHeld_Left = false,
-    keyHeld_Right = false,
+    keyHeld_Right = false;
 
-    mouseX = 0,
-    mouseY = 0;
 
 window.onload = function () {
     canvas = document.getElementById('mazeCanvas');
     canvasContext = canvas.getContext('2d');
 
-    ratRightFrames[0].src = 'images/ratSprites/RatRight1.png';
-    ratRightFrames[1].src = 'images/ratSprites/RatRight2.png';
-    ratLeftFrames[0].src = 'images/ratSprites/RatLeft1.png';
-    ratLeftFrames[1].src = 'images/ratSprites/RatLeft2.png';
+    ratRightFrames[0].src = 'images/ratSprites/ratTemp.png';
+    ratRightFrames[1].src = 'images/ratSprites/ratTemp.png';
+    ratLeftFrames[0].src = 'images/ratSprites/ratTemp.png';
+    ratLeftFrames[1].src = 'images/ratSprites/ratTemp.png';
 
     mazeCollisionCanvas = document.createElement('canvas');
     mazeCollisionCanvas.width = canvas.width;
@@ -56,30 +59,22 @@ window.onload = function () {
 
     mazeBackground.src = 'images/maze25.svg';
 
-    canvas.addEventListener('mousemove', updateMousePos);
     document.addEventListener('keydown', keyPressed);
     document.addEventListener('keyup', keyReleased);
 };
 
-function updateMousePos(evt) {
-    var rect = canvas.getBoundingClientRect();
-    var root = document.documentElement;
-
-    mouseX = evt.clientX - rect.left - root.scrollLeft;
-    mouseY = evt.clientY - rect.top - root.scrollTop;
-}
 
 function keyPressed(evt) {
-    if (evt.keyCode == KEY_A) {
+    if (evt.keyCode == KEY_LEFT) {
         keyHeld_Left = true;
     }
-    if (evt.keyCode == KEY_D) {
+    if (evt.keyCode == KEY_RIGHT) {
         keyHeld_Right = true;
     }
-    if (evt.keyCode == KEY_W) {
+    if (evt.keyCode == KEY_UP) {
         keyHeld_Up = true;
     }
-    if (evt.keyCode == KEY_S) {
+    if (evt.keyCode == KEY_DOWN) {
         keyHeld_Down = true;
     }
 
@@ -87,16 +82,16 @@ function keyPressed(evt) {
 }
 
 function keyReleased(evt) {
-    if (evt.keyCode == KEY_A) {
+    if (evt.keyCode == KEY_LEFT) {
         keyHeld_Left = false;
     }
-    if (evt.keyCode == KEY_D) {
+    if (evt.keyCode == KEY_RIGHT) {
         keyHeld_Right = false;
     }
-    if (evt.keyCode == KEY_W) {
+    if (evt.keyCode == KEY_UP) {
         keyHeld_Up = false;
     }
-    if (evt.keyCode == KEY_S) {
+    if (evt.keyCode == KEY_DOWN) {
         keyHeld_Down = false;
     }
 
@@ -220,14 +215,10 @@ function drawAll() {
     canvasContext.clearRect(0, 0, canvas.width, canvas.height);
     canvasContext.drawImage(mazeBackground, 0, 0, canvas.width, canvas.height);
     drawCheeses();
-
+    drawCat();
     var activeFrames = ratDirection === 'left' ? ratLeftFrames : ratRightFrames;
     var spriteImg = activeFrames[ratAnimationFrame];
-    if (spriteImg && spriteImg.complete) {
-        canvasContext.drawImage(spriteImg, playerX, playerY, playerW, playerH);
-    } else {
-        colorRect(playerX, playerY, playerW, playerH, 'white');
-    }
+    canvasContext.drawImage(spriteImg, playerX - offsetX, playerY - offsetY, spriteSize, spriteSize);
 
 }
 
