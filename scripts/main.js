@@ -20,6 +20,7 @@ var canvas, canvasContext,
     mazeCollisionCanvas,
     mazeCollisionContext;
 
+gameEnded = false;
 var KEY_UP = 38,
     KEY_LEFT = 37,
     KEY_DOWN = 40,
