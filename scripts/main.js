@@ -11,12 +11,10 @@ var canvas, canvasContext,
     playerSpeedX = 0,
     playerSpeedY = 0,
     mazeBackground = new Image(),
-    ratRightFrames = [new Image(), new Image()],
-    ratLeftFrames = [new Image(), new Image()],
-    ratAnimationFrame = 0,
-    ratAnimationTick = 0,
-    ratAnimationSpeed = 8,
-    ratDirection = 'right',
+    ratWalkingRight = new Image(),
+    ratWalkingLeft = new Image(),
+    ratStanding = new Image(),
+    currentRatSprite,
     mazeCollisionCanvas,
     mazeCollisionContext;
 
@@ -36,10 +34,10 @@ window.onload = function () {
     canvas = document.getElementById('mazeCanvas');
     canvasContext = canvas.getContext('2d');
 
-    ratRightFrames[0].src = 'images/ratSprites/ratTemp.png';
-    ratRightFrames[1].src = 'images/ratSprites/ratTemp.png';
-    ratLeftFrames[0].src = 'images/ratSprites/ratTemp.png';
-    ratLeftFrames[1].src = 'images/ratSprites/ratTemp.png';
+    ratWalkingRight.src = 'images/ratSprites/ratWalkingRight.gif';
+    ratWalkingLeft.src = 'images/ratSprites/ratWalkingLeft.gif';
+    ratStanding.src = 'images/ratSprites/ratWalkingRight.gif';
+    currentRatSprite = ratStanding;
 
     mazeCollisionCanvas = document.createElement('canvas');
     mazeCollisionCanvas.width = canvas.width;
@@ -160,23 +158,12 @@ function playerMove() {
         playerSpeedX = 5;
     }
 
-    if (keyHeld_Right || keyHeld_Down) {
-        ratDirection = 'right';
-        ratAnimationTick++;
-        if (ratAnimationTick >= ratAnimationSpeed) {
-            ratAnimationTick = 0;
-            ratAnimationFrame = (ratAnimationFrame + 1) % 2;
-        }
-    } else if (keyHeld_Left || keyHeld_Up) {
-        ratDirection = 'left';
-        ratAnimationTick++;
-        if (ratAnimationTick >= ratAnimationSpeed) {
-            ratAnimationTick = 0;
-            ratAnimationFrame = (ratAnimationFrame + 1) % 2;
-        }
+    if (playerSpeedX > 0 || playerSpeedY > 0) {
+        currentRatSprite = ratWalkingRight;
+    } else if (playerSpeedX < 0 || playerSpeedY < 0) {
+        currentRatSprite = ratWalkingLeft;
     } else {
-        ratAnimationTick = 0;
-        ratAnimationFrame = 0;
+        currentRatSprite = ratStanding;
     }
 
     // Maze collision
@@ -228,9 +215,7 @@ function drawAll() {
     colorRect(425, 850, 20, 20, 'black');
     drawCheeses();
     drawCat();
-    var activeFrames = ratDirection === 'left' ? ratLeftFrames : ratRightFrames;
-    var spriteImg = activeFrames[ratAnimationFrame];
-    canvasContext.drawImage(spriteImg, playerX - offsetX, playerY - offsetY, spriteSize, spriteSize);
+    canvasContext.drawImage(currentRatSprite, playerX - offsetX, playerY - offsetY, spriteSize, spriteSize);
 
 }
 
