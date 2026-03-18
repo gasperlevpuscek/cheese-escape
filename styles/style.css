@@ -35,7 +35,7 @@ h1 {
     margin: 0;
 }
 
-.mazeDiv {
+.gameDiv {
     width: 100%;
     height: fit-content;
     display: flex;
@@ -62,4 +62,26 @@ h1 {
     object-fit: contain;
     display: block;
     flex-shrink: 0;
+}
+
+
+.mazeDiv {
+    position: relative;
+    width: 870px;
+    height: 870px;
+}
+
+.mazeCanvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 1;
+}
+
+#rat {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    z-index: 2;
+    pointer-events: none;
 }

@@ -1,8 +1,8 @@
 var canvas, canvasContext,
     playerX = 430,
-    playerY = 20,
-    playerW = 15,
-    playerH = 15,
+    playerY = 10,
+    playerW = 17,
+    playerH = 17,
 
     spriteSize = 60,
     offsetX = (spriteSize - playerW) / 2,
@@ -18,6 +18,9 @@ var canvas, canvasContext,
     mazeCollisionCanvas,
     mazeCollisionContext;
 
+
+var ratElement;
+var ratCurrentSrc = '';
 gameEnded = false;
 var KEY_UP = 38,
     KEY_LEFT = 37,
@@ -33,10 +36,8 @@ var KEY_UP = 38,
 window.onload = function () {
     canvas = document.getElementById('mazeCanvas');
     canvasContext = canvas.getContext('2d');
+    ratElement = document.getElementById('rat');
 
-    ratWalkingRight.src = 'images/ratSprites/ratWalkingRight.gif';
-    ratWalkingLeft.src = 'images/ratSprites/ratWalkingLeft.gif';
-    ratStanding.src = 'images/ratSprites/ratWalkingRight.gif';
     currentRatSprite = ratStanding;
 
     mazeCollisionCanvas = document.createElement('canvas');
@@ -149,13 +150,13 @@ function playerMove() {
     playerSpeedY = 0;
 
     if (keyHeld_Up) {
-        playerSpeedY = -5;
+        playerSpeedY = -3;
     } else if (keyHeld_Down) {
-        playerSpeedY = 5;
+        playerSpeedY = 3;
     } else if (keyHeld_Left) {
-        playerSpeedX = -5;
+        playerSpeedX = -3;
     } else if (keyHeld_Right) {
-        playerSpeedX = 5;
+        playerSpeedX = 3;
     }
 
     if (playerSpeedX > 0 || playerSpeedY > 0) {
@@ -188,25 +189,15 @@ function playerMove() {
         playerY = nextY;
     }
 
-    // canvas sides collision
-    if (playerY < 0) {
-        playerY = 0;
-    } else if (playerY > canvas.height - playerH) {
-        playerY = canvas.height - playerH;
-    }
-
-    if (playerX < 0) {
-        playerX = 0;
-    } else if (playerX > canvas.width - playerW) {
-        playerX = canvas.width - playerW;
-    }
-
     if (Math.abs(playerX - 425) <= 10 && Math.abs(playerY - 850) <= 10) {
         ratWin();
         return;
     }
 
     collectCheesesNearPlayer(playerX, playerY, playerW, playerH);
+
+    updateRatSprite();
+    updateRatPosition();
 }
 
 function drawAll() {
@@ -215,13 +206,38 @@ function drawAll() {
     colorRect(425, 850, 20, 20, 'black');
     drawCheeses();
     drawCat();
-    canvasContext.drawImage(currentRatSprite, playerX - offsetX, playerY - offsetY, spriteSize, spriteSize);
-
+    canvasContext.drawImage(ratWalkingRight, playerX - offsetX, playerY - offsetY, spriteSize, spriteSize);
 }
 
 function colorRect(leftX, topY, width, height, drawColor) {
     canvasContext.fillStyle = drawColor;
     canvasContext.fillRect(leftX, topY, width, height);
+}
+
+function updateRatPosition() {
+    ratElement.style.left = (playerX - offsetX) + 'px';
+    ratElement.style.top = (playerY - offsetY) + 'px';
+}
+
+function setRatSprite(newSrc) {
+    if (ratCurrentSrc !== newSrc) {
+        ratCurrentSrc = newSrc;
+        ratElement.src = newSrc;
+    }
+}
+
+function updateRatSprite() {
+    if (playerSpeedX > 0) {
+        setRatSprite('images/ratSprites/ratWalkingRight.gif');
+    } else if (playerSpeedX < 0) {
+        setRatSprite('images/ratSprites/ratWalkingLeft.gif');
+    } else if (playerSpeedY < 0) {
+        setRatSprite('images/ratSprites/ratWalkingLeft.gif');
+    } else if (playerSpeedY > 0) {
+        setRatSprite('images/ratSprites/ratWalkingRight.gif');
+    } else {
+        setRatSprite('images/ratSprites/ratStanding.png');
+    }
 }
 
 function isBlackPixel(x, y) {
@@ -238,7 +254,7 @@ function isBlackPixel(x, y) {
     var b = pixel[2];
     var a = pixel[3];
 
-    return a < 0 && r > 10 && g > 10 && b > 10;
+    return a > 0 && r < 10 && g < 10 && b < 10;
 }
 
 

@@ -76,10 +76,11 @@ function drawCat() {
 function ripRat() {
     meowSfx();
     stopSound();
+    pianoMan();
     gameEnded = true;
     Swal.fire({
         title: "You have been collected!",
-        text: "The cat has got you. Better luck next time!",
+        text: "The cat has got you. Rip rat...",
         confirmButtonColor: "#3085d6",
         confirmButtonText: "Retry",
         allowOutsideClick: false,
