@@ -123,8 +123,6 @@ MIT License. Free to use, modify, and distribute.
 
 ## Sources
 
-- Cheese spawning logic (partly):
-    https://stackoverflow.com/questions/37713983/java-swt-get-actual-x-y-coordinates-from-image-after-scaling-and-zooming
 - Movement:
     https://codepen.io/AaronMakesGames/pen/grRGxX
 - Rat sprite reference:
