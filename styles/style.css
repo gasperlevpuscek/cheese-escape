@@ -85,3 +85,11 @@ h1 {
     z-index: 2;
     pointer-events: none;
 }
+
+#cat {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    z-index: 2;
+    pointer-events: none;
+}

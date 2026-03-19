@@ -129,7 +129,6 @@ function collectCheesesNearPlayer(playerX, playerY, playerW, playerH) {
     if (cheeses.length < cheeseCountBefore) {
         updateCheesePanel();
         cheeseEatSfx();
-        nom();
     }
 }
 

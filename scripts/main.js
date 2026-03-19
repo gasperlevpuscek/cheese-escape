@@ -203,10 +203,8 @@ function playerMove() {
 function drawAll() {
     canvasContext.clearRect(0, 0, canvas.width, canvas.height);
     canvasContext.drawImage(mazeBackground, 0, 0, canvas.width, canvas.height);
-    colorRect(425, 850, 20, 20, 'black');
     drawCheeses();
     drawCat();
-    canvasContext.drawImage(ratWalkingRight, playerX - offsetX, playerY - offsetY, spriteSize, spriteSize);
 }
 
 function colorRect(leftX, topY, width, height, drawColor) {
@@ -216,7 +214,7 @@ function colorRect(leftX, topY, width, height, drawColor) {
 
 function updateRatPosition() {
     ratElement.style.left = (playerX - offsetX) + 'px';
-    ratElement.style.top = (playerY - offsetY) + 'px';
+    ratElement.style.top = (playerY - offsetY - 5) + 'px';
 }
 
 function setRatSprite(newSrc) {
